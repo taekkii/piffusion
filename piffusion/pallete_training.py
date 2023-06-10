@@ -38,6 +38,7 @@ def parse_arg():
     parser.add_argument("--no_reload", action="store_true")
     
     parser.add_argument("--batch_size", type=int, default=128)
+    parser.add_argument("--train_val_ratio", type=float, default=0.95)
 
     parser.add_argument("--i_save", type=int, default=500)
     parser.add_argument("--i_val",  type=int, default=25000)
@@ -120,7 +121,7 @@ if __name__ == '__main__':
         model.train()
         
         # x0 = piffusion_data.sample(B, imgs, extrinsic, bbox=(-4.1,4.1), return_type="tensor") # [B, 13, h, w]
-        x0 = piffusion_data.sample_multiple_scenes(B, imgs_arr, extrinsic_arr, bbox=(-4.1,4.1), train_val_ratio=1.0, return_type="tensor")
+        x0 = piffusion_data.sample_multiple_scenes(B, imgs_arr, extrinsic_arr, bbox=(-4.1,4.1), train_val_ratio=args.train_val_ratio, return_type="tensor")
         t = (torch.rand(B,device='cuda')*1000).long() # [B]
         noise = torch.randn_like(x0[:, 6:]) # [B, 7, h, w]
         
@@ -143,7 +144,7 @@ if __name__ == '__main__':
         
         if train_i % I_VAL == 0:
             print(f"[VALIDATE]train_i: {train_i}")
-            pallete_inference.validate(imgs_arr, extrinsic_arr, os.path.join(RESULT_PATH,f"res{train_i}"), model, 64)
+            pallete_inference.validate(args, imgs_arr, extrinsic_arr, os.path.join(RESULT_PATH,f"res{train_i}"), model, 64)
 
         if train_i % I_PRINT == 0:
             loss_print = loss.item()

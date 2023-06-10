@@ -14,7 +14,7 @@ def prepare_data(data_path:str):
     return imgs, intrinsic, extrinsic
 
 
-def sample_helper(img1, img2, pose1, pose2, bbox=(-1.0,1.0), return_type="numpy"):
+def sample_helper(img1, img2, pose1, pose2, bbox=(-1.0,1.0), return_type="numpy", noise=0.04):
     """
     TODO: Rename terrible function name.
     """
@@ -48,6 +48,8 @@ def sample_helper(img1, img2, pose1, pose2, bbox=(-1.0,1.0), return_type="numpy"
     
     # Concatenate
     result = np.concatenate([img_cat, q_img, t_img],-1) # (b,h,w,13) 
+    result[:,:,:,6:] += np.random.normal(0, noise,size=(b,h,w,7))
+
     if return_type == "numpy":
         return result
     elif return_type == "tensor":
@@ -156,6 +158,14 @@ def back_to_absolute_pose(relative_pose, bbox, pivot_pose):
 
 # import piffusion_utils
 
+# if __name__ == "__main__":
+#     DATA_PATH="./data/lego_sphere"
+#     np.set_printoptions(precision=4, suppress=True)
+#     img_arr, _ , extrinsic_arr = prepare_data_multiple_scenes(data_paths=[os.path.join(DATA_PATH, directory) for directory in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, directory))])
+#     # import pdb;pdb.set_trace()
+#     data = sample_multiple_scenes(64, img_arr, extrinsic_arr, bbox=(-4,4), return_type="tensor")
+    
+#     piffusion_utils.save_13channel_image("./results/tmp", data)
 # if __name__ == "__main__":
 #     DATA_PATH="./data/nerf_synthetic_merge"
 #     np.set_printoptions(precision=4, suppress=True)

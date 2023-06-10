@@ -42,14 +42,14 @@ def ddpm_sampling(condition, model, b, T=1000):
     return x
 
 @torch.no_grad()
-def validate(imgs, extrinsic, result_path, model, b, T=1000):
+def validate(args, imgs, extrinsic, result_path, model, b, T=1000):
     DATA_TYPE = "train"
     print(f"DATA_TYPE = {DATA_TYPE}")
     torch.cuda.empty_cache()
     model.eval()
 
     # val_sample = piffusion_data.sample(b, imgs, extrinsic, bbox=(-4.1,4.1), data_type=DATA_TYPE, return_type="tensor") # [B, 13, h, w]       
-    val_sample = piffusion_data.sample_multiple_scenes(b, imgs, extrinsic, bbox=(-4.1,4.1), data_type=DATA_TYPE, train_val_ratio=1.0, return_type="tensor") # [B, 13, h, w]       
+    val_sample = piffusion_data.sample_multiple_scenes(b, imgs, extrinsic, bbox=(-4.1,4.1), data_type=DATA_TYPE, train_val_ratio=args.train_val_ratio, return_type="tensor") # [B, 13, h, w]       
     
     x = ddpm_sampling(val_sample[:, :6], model, b, 1000)
 
