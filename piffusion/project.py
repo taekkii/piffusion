@@ -6,6 +6,7 @@ import pallete_inference
 
 import numpy as np
 import os
+import cv2
 
 def save_result(args, imgs_arr, extrinsic_arr, result_path, model, skip=16):
     
@@ -39,14 +40,27 @@ def save_result(args, imgs_arr, extrinsic_arr, result_path, model, skip=16):
         relative_poses = piffusion_utils.get_pose_from_pose_img(pose_img)
 
         result_poses = [pose1[0]]
-        for relative_pose in relative_poses:
-            result_poses.append( piffusion_data.back_to_absolute_pose(relative_pose.reshape(1,3,4), (-4.1,4.1), result_poses[-1]).reshape((3,4)) )
+        cumul = False
+        for i, relative_pose in enumerate(relative_poses):
+            if cumul:
+                result_poses.append( piffusion_data.back_to_absolute_pose(relative_pose.reshape(1,3,4), (-4.1,4.1), result_poses[-1]).reshape((3,4)) )
+            else:
+                result_poses.append(piffusion_data.back_to_absolute_pose(relative_pose.reshape(1,3,4), (-4.1,4.1), pose1[i]).reshape((3,4)) )
         result_poses = np.stack(result_poses)
 
         piffusion_utils.visualize_pose(pose=result_poses, output_dir=OUTPUT_DIR_SCENE)
         
         np.save(os.path.join(OUTPUT_DIR_SCENE, "result.npy"), result_poses)
         
+        img1_path = os.path.join(OUTPUT_DIR_SCENE, "img1")
+        img2_path = os.path.join(OUTPUT_DIR_SCENE, "img2")
+        os.makedirs(img1_path, exist_ok=True)
+        os.makedirs(img2_path, exist_ok=True)
+        
+        for i, (x1, x2) in enumerate(zip(img1,img2)):
+            cv2.imwrite(os.path.join(img1_path,f"{i:03d}.png"), cv2.cvtColor(x1, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(os.path.join(img2_path,f"{i:03d}.png"), cv2.cvtColor(x2, cv2.COLOR_RGB2BGR))
+            
 
 # # DBG
 # if __name__ == "__main__":
