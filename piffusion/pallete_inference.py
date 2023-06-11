@@ -43,7 +43,7 @@ def ddpm_sampling(condition, model, b, T=1000):
 
 @torch.no_grad()
 def validate(args, imgs, extrinsic, result_path, model, b, T=1000):
-    DATA_TYPE = "train"
+    DATA_TYPE = args.validate_on
     print(f"DATA_TYPE = {DATA_TYPE}")
     torch.cuda.empty_cache()
     model.eval()
