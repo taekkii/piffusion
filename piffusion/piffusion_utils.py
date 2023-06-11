@@ -148,8 +148,6 @@ def visualize_pose(pose: np.array, output_dir:str, filename:str="pose_visulizati
     
     m_cam = None
     for i, P in enumerate(pose):
-        if i >= 5:
-            break
         R_d = P[:, :3]
         C_d = P[:, 3]
         T = np.eye(4)
@@ -161,6 +159,7 @@ def visualize_pose(pose: np.array, output_dir:str, filename:str="pose_visulizati
             m_cam = m
         else:
             m_cam += m
+    os.makedirs(output_dir, exist_ok=True)
     output_path = os.path.join(output_dir, filename)
     o3d.io.write_triangle_mesh(output_path, m_cam)
 

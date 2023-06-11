@@ -79,8 +79,12 @@ def sample(batch_size, imgs, extrinsic, bbox=(-1.0,1.0), train_val_ratio=0.95, d
     return sample_helper(img1, img2, pose1, pose2, bbox, return_type)
     
 
-def prepare_data_multiple_scenes(data_paths:list):
+def prepare_data_multiple_scenes(data_path:str):
     
+    data_paths = [os.path.join(data_path, directory) for directory in os.listdir(data_path) if os.path.isdir(os.path.join(data_path, directory))]
+    print("===== DATA PATHS =====")
+    print(data_paths)
+
     imgs_arr, intrinsic_arr, extrinsic_arr = [], [], []
     for data_path in data_paths:
         imgs, intrinsic, extrinsic = prepare_data(data_path)
@@ -94,7 +98,7 @@ def prepare_data_multiple_scenes(data_paths:list):
 
     return imgs_arr, intrinsic_arr, extrinsic_arr 
 
-def sample_multiple_scenes(batch_size, imgs_arr, extrinsic_arr, bbox=(-1.0,1.0), train_val_ratio=0.95, data_type="train", return_type="numpy"):
+def sample_multiple_scenes(batch_size, imgs_arr, extrinsic_arr, bbox=(-1.0,1.0), train_val_ratio=0.95, data_type="train", return_type="numpy", noise=0.0):
 
     partition = int(imgs_arr.shape[1]*train_val_ratio)
     if data_type == "train":
@@ -116,7 +120,7 @@ def sample_multiple_scenes(batch_size, imgs_arr, extrinsic_arr, bbox=(-1.0,1.0),
     pose1 = extrinsic_arr[idx_s, idx1_n]
     pose2 = extrinsic_arr[idx_s, idx2_n]
     
-    return sample_helper(img1, img2, pose1, pose2, bbox, return_type)
+    return sample_helper(img1, img2, pose1, pose2, bbox, return_type, noise)
 
 def back_to_absolute_pose(relative_pose, bbox, pivot_pose):
     """

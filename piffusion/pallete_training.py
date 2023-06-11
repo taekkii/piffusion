@@ -22,6 +22,7 @@ import piffusion_data
 import piffusion_utils
 import pallete_inference
 
+import project
 
 def parse_arg():
     parser = configargparse.ArgumentParser()
@@ -33,13 +34,18 @@ def parse_arg():
     parser.add_argument("--expname","-e", type=str, default="merge_pallete")
 
     parser.add_argument("--model_config", type=str, default="ddim_pallete.yml")
+
     parser.add_argument("--sample_only", action="store_true")
+    parser.add_argument("--project_output", action="store_true")
 
     parser.add_argument("--no_reload", action="store_true")
     
     parser.add_argument("--batch_size", type=int, default=128)
     parser.add_argument("--train_val_ratio", type=float, default=0.95)
-
+    parser.add_argument("--validate_on", type=str, choices=["train", "val"], default="val")
+    
+    parser.add_argument("--noise_pose", type=float, default=0.0)
+    
     parser.add_argument("--i_save", type=int, default=500)
     parser.add_argument("--i_val",  type=int, default=25000)
     parser.add_argument("--i_print", type=int, default=10)
@@ -62,6 +68,11 @@ if __name__ == '__main__':
     DATA_PATH = os.path.join(args.data_dir, args.data_name)
     os.makedirs(RESULT_PATH, exist_ok=True)
 
+    # save argument
+    with open( os.path.join(RESULT_PATH, "args.txt"), "w") as fp:
+        for k,v in args.__dict__.items():
+            print(k, ":", v, file=fp)
+
 
     start = 0
     n_iters = 5000000
@@ -69,10 +80,8 @@ if __name__ == '__main__':
     grad_clip = 1.0
     
     # load data.
-    data_paths = [os.path.join(DATA_PATH, directory) for directory in os.listdir(DATA_PATH) if os.path.isdir(os.path.join(DATA_PATH, directory))]
-    print(data_paths)
     
-    imgs_arr, _ , extrinsic_arr = piffusion_data.prepare_data_multiple_scenes(data_paths=data_paths)
+    imgs_arr, _ , extrinsic_arr = piffusion_data.prepare_data_multiple_scenes(data_path=DATA_PATH)
     
     # get model and load checkpoint (download if not exist)
     model = ddim.Model(config)    
@@ -103,9 +112,14 @@ if __name__ == '__main__':
     
     if args.sample_only:
         print("[SAMPLE_ONLY]")
-        pallete_inference.validate(imgs_arr, extrinsic_arr, os.path.join(RESULT_PATH,f"sample{start+1}"), model, 64)
+        pallete_inference.validate(args, imgs_arr, extrinsic_arr, os.path.join(RESULT_PATH,f"sample{start+1}"), model, 64)
         exit()
     
+    if args.project_output:
+        print("[PRODUCING PROJECT OUTPUT]")
+        project.save_result(args, imgs_arr, extrinsic_arr, RESULT_PATH, model, skip=16)
+        exit(0)
+
     tensorboard = SummaryWriter(os.path.join("results","piffusion"))
     model = DataParallel(model)
     
@@ -121,7 +135,7 @@ if __name__ == '__main__':
         model.train()
         
         # x0 = piffusion_data.sample(B, imgs, extrinsic, bbox=(-4.1,4.1), return_type="tensor") # [B, 13, h, w]
-        x0 = piffusion_data.sample_multiple_scenes(B, imgs_arr, extrinsic_arr, bbox=(-4.1,4.1), train_val_ratio=args.train_val_ratio, return_type="tensor")
+        x0 = piffusion_data.sample_multiple_scenes(B, imgs_arr, extrinsic_arr, bbox=(-4.1,4.1), train_val_ratio=args.train_val_ratio, return_type="tensor", noise=args.noise_pose)
         t = (torch.rand(B,device='cuda')*1000).long() # [B]
         noise = torch.randn_like(x0[:, 6:]) # [B, 7, h, w]
         
