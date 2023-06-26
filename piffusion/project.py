@@ -34,6 +34,15 @@ def save_result(args, imgs_arr, extrinsic_arr, result_path, model, skip=16):
         prepared_data = piffusion_data.sample_helper(img1, img2, pose1, pose2, bbox=(-4.1,4.1), return_type="tensor", noise=0.0)
         piffusion_utils.save_13channel_image(OUTPUT_DIR_SCENE, prepared_data)
         
+        img1_path = os.path.join(OUTPUT_DIR_SCENE, "img1")
+        img2_path = os.path.join(OUTPUT_DIR_SCENE, "img2")
+        os.makedirs(img1_path, exist_ok=True)
+        os.makedirs(img2_path, exist_ok=True)
+        
+        for i, (x1, x2) in enumerate(zip(img1,img2)):
+            cv2.imwrite(os.path.join(img1_path,f"{i:03d}.png"), cv2.cvtColor(x1, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(os.path.join(img2_path,f"{i:03d}.png"), cv2.cvtColor(x2, cv2.COLOR_RGB2BGR))
+            
         x = pallete_inference.ddpm_sampling(prepared_data[:, :6], model, prepared_data.shape[0], 1000)
         
         pose_img = (x[:,6:].permute(0,2,3,1)).cpu().numpy()
@@ -52,14 +61,6 @@ def save_result(args, imgs_arr, extrinsic_arr, result_path, model, skip=16):
         
         np.save(os.path.join(OUTPUT_DIR_SCENE, "result.npy"), result_poses)
         
-        img1_path = os.path.join(OUTPUT_DIR_SCENE, "img1")
-        img2_path = os.path.join(OUTPUT_DIR_SCENE, "img2")
-        os.makedirs(img1_path, exist_ok=True)
-        os.makedirs(img2_path, exist_ok=True)
-        
-        for i, (x1, x2) in enumerate(zip(img1,img2)):
-            cv2.imwrite(os.path.join(img1_path,f"{i:03d}.png"), cv2.cvtColor(x1, cv2.COLOR_RGB2BGR))
-            cv2.imwrite(os.path.join(img2_path,f"{i:03d}.png"), cv2.cvtColor(x2, cv2.COLOR_RGB2BGR))
             
 
 # # DBG

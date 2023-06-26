@@ -1,3 +1,12 @@
 
 *.pyc
 __pycache__
+*.png
+*.jpg
+sfm/images
+sfm/images_mid
+sfm/images_small
+sfm/my_data
+sfm/my_data2
+sfm/output*
+sfm/*_dbg
